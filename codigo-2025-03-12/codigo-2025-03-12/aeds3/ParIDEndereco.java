@@ -1,13 +1,13 @@
-package aed3;
+package aeds3;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class ParIDEndereco implements aed3.RegistroHashExtensivel<ParIDEndereco> {
+public class ParIDEndereco implements RegistroHashExtensivel {
     
-    private int id;   // chave
+    private int id;           // chave
     private long endereco;    // valor
     private final short TAMANHO = 12;  // tamanho em bytes
 
