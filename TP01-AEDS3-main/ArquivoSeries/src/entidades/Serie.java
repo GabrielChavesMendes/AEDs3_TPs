@@ -1,13 +1,12 @@
 package entidades;
 
+import aeds3.EntidadeArquivo;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.time.LocalDate;
 import java.util.Set;
-
-import aeds3.EntidadeArquivo;
 
 public class Serie implements EntidadeArquivo {
 
@@ -18,11 +17,11 @@ public class Serie implements EntidadeArquivo {
     private String streaming;
 
     private static final Set<String> STREAMING_SERVICES = Set.of(
-        "Netflix", "Prime", "Max", "Disney", "HBO", "AppleTV", "Hulu", "Paramount", "StarPlus", "Crunchyroll"
+        "Netflix", "Prime", "Max", "Disney", "HBO", "AppleTV", "Hulu", "Paramount", "StarPlus"
     );
 
     public Serie() throws Exception {
-        this(-1, "", "", LocalDate.now(), "");
+        this(-1, "", "", LocalDate.now(), "Netflix");
     }
 
     public Serie(String nome, String sinopse, LocalDate dataLancamento, String streaming) throws Exception {
@@ -42,11 +41,11 @@ public class Serie implements EntidadeArquivo {
     }
 
     
-    public int getId() {
+    public int getID() {
         return id;
     }
     
-    public void setId(int id) {
+    public void setID(int id) {
         this.id = id;
     }
     
@@ -96,7 +95,7 @@ public class Serie implements EntidadeArquivo {
         return baos.toByteArray();
     }
     
-    public void fromByteArray(byte[] vb) throws Exception {//pegando de um array de bytes
+    public void fromByteArray(byte[] vb) throws Exception {
         ByteArrayInputStream bais = new ByteArrayInputStream(vb);
         DataInputStream dis = new DataInputStream(bais);
         id = dis.readInt();
@@ -104,29 +103,30 @@ public class Serie implements EntidadeArquivo {
         sinopse = dis.readUTF();
         dataLancamento = LocalDate.ofEpochDay(dis.readInt());
         streaming = dis.readUTF();
+
+        if (!isValidStreaming(streaming)) {
+            throw new Exception("Streaming inválido: " + streaming);
+        }
     }
+
+    @Override
+    public String toString() {
+        try {
+            return "\nID........: " + this.id +
+                    "\nName......: " + this.nome +
+                    "\nSinopse......: " + this.sinopse +
+                    "\nStreaming..: " + this.streaming;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return " ";
+    }
+
     
     public static boolean isValidStreaming(String streaming) {
         if (!STREAMING_SERVICES.contains(streaming)) {
             return false;
         }
         return true;
-    }
-
-    @Override
-    public void setID(int id) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setID'");
-    }
-
-    @Override
-    public int getID() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getID'");
-    }
-
-    public static boolean isValidNome(String nome2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'isValidNome'");
     }
 }

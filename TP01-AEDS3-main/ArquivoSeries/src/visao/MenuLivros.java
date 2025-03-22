@@ -1,18 +1,17 @@
 package visao;
+import entidades.Livro;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Scanner;
-
-import entidades.Serie;
-import modelo.ArquivoSerie;
+import modelo.ArquivoLivros;
 
 public class MenuLivros {
     
-    ArquivoSerie arqSeries;
+    ArquivoLivros arqLivros;
     private static Scanner console = new Scanner(System.in);
 
     public MenuLivros() throws Exception {
-        arqSeries = new ArquivoSerie();
+        arqLivros = new ArquivoLivros();
     }
 
     public void menu() {
@@ -39,16 +38,19 @@ public class MenuLivros {
 
             switch (opcao) {
                 case 1:
-                    buscarNome();
+                    buscarLivroISBN();
                     break;
                 case 2:
-                    incluirSerie();
+                    buscarLivrosTitulo();
                     break;
                 case 3:
-                    alterarSerie();
+                    incluirLivro();
                     break;
                 case 4:
-                    excluirSerie();
+                    alterarLivro();
+                    break;
+                case 5:
+                    excluirLivro();
                     break;
                 case 0:
                     break;
@@ -59,22 +61,53 @@ public class MenuLivros {
 
         } while (opcao != 0);
     }
-   
 
-    public void buscarNome() {
+    public void buscarLivroISBN() {
+        System.out.println("\nBusca de livro por ISBN");
+        String isbn;
+        boolean dadosCorretos = false;
+
+        do {
+            System.out.print("\nISBN (13 dígitos): ");
+            isbn = console.nextLine();  // Lê o ISBN digitado pelo usuário
+
+            if(isbn.isEmpty())
+                return; 
+
+            // Validação do ISBN (13 dígitos e composto apenas por números)
+            if (Livro.isValidISBN13(isbn)) 
+                dadosCorretos = true;  // ISBN válido
+            else
+                System.out.println("ISBN inválido. O ISBN deve conter exatamente 13 dígitos numéricos, sem pontos e traços.");
+        } while (!dadosCorretos);
+
+        try {
+            Livro livro = arqLivros.readISBN(isbn);  // Chama o método de leitura da classe Arquivo
+            if (livro != null) {
+                mostraLivro(livro);  // Exibe os detalhes do livro encontrado
+            } else {
+                System.out.println("Livro não encontrado.");
+            }
+        } catch(Exception e) {
+            System.out.println("Erro do sistema. Não foi possível buscar o livro!");
+            e.printStackTrace();
+        }
+    }   
+
+    public void buscarLivrosTitulo() {
         System.out.println("\nBusca de livro por título");
         System.out.print("\nTítulo: ");
-        String nome = console.nextLine();  // Lê o título digitado pelo usuário
+        String titulo = console.nextLine();  // Lê o título digitado pelo usuário
 
-        if(nome.isEmpty())
+        if(titulo.isEmpty())
             return; 
 
         try {
-            Serie[] series = arqSeries.readNome(nome);  // Chama o método de leitura da classe Arquivo
-            if (series.length>0) {
+            Livro[] livros = arqLivros.readTitulo(titulo);  // Chama o método de leitura da classe Arquivo
+            if (livros.length>0) {
                 int n=1;
-                for(Serie l : series) {
-                    System.out.println((n++)+": "+l.getNome());
+                for(Livro l : livros) {
+                    System.out.println((n++)+": "+l.getTitulo());
                 }
                 System.out.print("Escolha o livro: ");
                 int o;
@@ -87,7 +120,7 @@ public class MenuLivros {
                     if(o<=0 || o>n-1)
                         System.out.println("Escolha um número entre 1 e "+(n-1));
                 }while(o<=0 || o>n-1);
-                mostrarSerie(series[o-1]);  // Exibe os detalhes do livro encontrado
+                mostraLivro(livros[o-1]);  // Exibe os detalhes do livro encontrado
             } else {
                 System.out.println("Nenhum livro encontrado.");
             }
@@ -95,25 +128,27 @@ public class MenuLivros {
             System.out.println("Erro do sistema. Não foi possível buscar os livros!");
             e.printStackTrace();
         }
-    }      
+    }   
 
 
-    public void incluirSerie() {
+    public void incluirLivro() {
         System.out.println("\nInclusão de livro");
-        String nome = "";
-        String sinopse = "";
-        String streaming = "";
+        String isbn = "";
+        String titulo = "";
+        String autor = "";
+        int edicao = 0;
         LocalDate dataLancamento = null;
+        float preco = 0;
         boolean dadosCorretos = false;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         dadosCorretos = false;
         do {
             System.out.print("ISBN (13 dígitos sem pontos ou traço. Deixe vazio para cancelar.): ");
-            nome = console.nextLine();
-            if(nome.length()==0)
+            isbn = console.nextLine();
+            if(isbn.length()==0)
                 return;            
-            if(!Serie.isValidNome(nome))
+            if(!Livro.isValidISBN13(isbn))
                 dadosCorretos = true;
             else
                 System.err.println("O ISBN deve ter exatamente 13 dígitos.");
@@ -122,11 +157,34 @@ public class MenuLivros {
         dadosCorretos = false;
         do {
             System.out.print("Título (min. de 4 letras): ");
-            nome = console.nextLine();
-            if(nome.length()>=4)
+            titulo = console.nextLine();
+            if(titulo.length()>=4)
                 dadosCorretos = true;
             else
                 System.err.println("O título do livro deve ter no mínimo 4 caracteres.");
+        } while(!dadosCorretos);
+
+        dadosCorretos = false;
+        do {
+            System.out.print("Autor (min. de 4 letras): ");
+            autor = console.nextLine();
+            if(autor.length()>=4)
+                dadosCorretos = true;
+            else
+                System.err.println("O nome do autor deve ter no mínimo 4 caracteres.");
+        } while(!dadosCorretos);
+
+        dadosCorretos = false;
+        do {
+            System.out.print("Edição: ");
+            if (console.hasNextInt()) {
+                edicao = console.nextInt();
+                if(edicao < 128)
+                    dadosCorretos = true;
+            }
+            if(!dadosCorretos)
+                System.err.println("Edição inválida! Por favor, insira um número válido entre 1 e 127.");
+            console.nextLine(); // Limpar o buffer 
         } while(!dadosCorretos);
 
         dadosCorretos = false;
@@ -141,58 +199,70 @@ public class MenuLivros {
             }
         } while(!dadosCorretos);
 
+        dadosCorretos = false;
+        do {
+            System.out.print("Preço: ");
+            if (console.hasNextFloat()) {
+                preco = console.nextFloat();
+                dadosCorretos = true;
+            } else {
+                System.err.println("Preço inválido! Por favor, insira um número válido.");
+            }
+            console.nextLine(); // Limpar o buffer 
+        } while(!dadosCorretos);
+
         System.out.print("\nConfirma a inclusão da livro? (S/N) ");
         char resp = console.nextLine().charAt(0);
         if(resp=='S' || resp=='s') {
             try {
-                Serie c = new Serie(nome, sinopse, dataLancamento, streaming);
-                arqSeries.create(c);
-                System.out.println("Serie incluído com sucesso.");
+                Livro c = new Livro(isbn, titulo, autor, edicao, dataLancamento, preco);
+                arqLivros.create(c);
+                System.out.println("Livro incluído com sucesso.");
             } catch(Exception e) {
                 System.out.println("Erro do sistema. Não foi possível incluir o livro!");
             }
         }
     }
 
-    public void alterarSerie() {
+    public void alterarLivro() {
         System.out.println("\nAlteração de livro");
-        String nome;
+        String isbn;
         boolean dadosCorretos;
 
         dadosCorretos = false;
         do {
-            System.out.print("\nNome: ");
-            nome = console.nextLine();  // Lê o ISBN digitado pelo usuário
+            System.out.print("\nISBN (13 dígitos): ");
+            isbn = console.nextLine();  // Lê o ISBN digitado pelo usuário
 
-            if(nome.isEmpty())
+            if(isbn.isEmpty())
                 return; 
 
             // Validação do ISBN (13 dígitos e composto apenas por números)
-            if (Serie.isValidNome(nome)) 
+            if (Livro.isValidISBN13(isbn)) 
                 dadosCorretos = true;  // ISBN válido
             else 
-                System.out.println("Nome inválido.");
+                System.out.println("ISBN inválido. O ISBN deve conter exatamente 13 dígitos numéricos, sem pontos e traços.");
         } while (!dadosCorretos);
 
 
         try {
             // Tenta ler o livro com o ID fornecido
-            Serie serie = arqSeries.readISBN(nome);
-            if (serie != null) {
-                mostrarSerie(serie);  // Exibe os dados do livro para confirmação
+            Livro livro = arqLivros.readISBN(isbn);
+            if (livro != null) {
+                mostraLivro(livro);  // Exibe os dados do livro para confirmação
 
                 // Alteração de ISBN
-                String novoNome;
+                String novoIsbn;
                 dadosCorretos = false;
                 do {
-                    System.out.print("Novo nome (deixe em branco para manter o anterior): ");
-                    novoNome = console.nextLine();
-                    if(!novoNome.isEmpty()) {
-                        if(Serie.isValidNome(novoNome)) {
-                            serie.setNome(novoNome);  // Atualiza o ISBN se fornecido
+                    System.out.print("Novo ISBN (deixe em branco para manter o anterior): ");
+                    novoIsbn = console.nextLine();
+                    if(!novoIsbn.isEmpty()) {
+                        if(Livro.isValidISBN13(novoIsbn)) {
+                            livro.setIsbn(novoIsbn);  // Atualiza o ISBN se fornecido
                             dadosCorretos = true;
                         } else 
-                            System.err.println("O nome deve ter mais de 2 letras.");
+                            System.err.println("O ISBN deve ter exatamente 13 dígitos.");
                     } else 
                         dadosCorretos = true;
                 } while(!dadosCorretos);
@@ -205,7 +275,7 @@ public class MenuLivros {
                     novoTitulo = console.nextLine();
                     if(!novoTitulo.isEmpty()) {
                         if(novoTitulo.length()>=4) {
-                            serie.setNome(novoTitulo);  // Atualiza o título se fornecido
+                            livro.setTitulo(novoTitulo);  // Atualiza o título se fornecido
                             dadosCorretos = true;
                         } else
                             System.err.println("O título do livro deve ter no mínimo 4 caracteres.");
@@ -221,7 +291,7 @@ public class MenuLivros {
                     novoAutor = console.nextLine();
                     if(!novoAutor.isEmpty()) {
                         if(novoAutor.length()>=4) {
-                            serie.setAutor(novoAutor);  // Atualiza o título se fornecido
+                            livro.setAutor(novoAutor);  // Atualiza o título se fornecido
                             dadosCorretos = true;
                         } else
                             System.err.println("O nome do autor deve ter no mínimo 4 caracteres.");
@@ -239,7 +309,7 @@ public class MenuLivros {
                         try {
                             int edicao = Integer.parseInt(novaEdicao);
                             if(edicao>0 && edicao<128) {
-                                serie.setEdicao((byte)edicao);  // Atualiza a edição, se fornecida
+                                livro.setEdicao((byte)edicao);  // Atualiza a edição, se fornecida
                                 dadosCorretos = true;
                             } else
                                  System.err.println("A edição deve ser um número entre 1 e 127.");
@@ -258,7 +328,7 @@ public class MenuLivros {
                     novoPreco = console.nextLine();
                     if(!novoPreco.isEmpty()) {
                         try {
-                            serie.setPreco(Float.parseFloat(novoPreco));  // Atualiza o preço, se fornecido
+                            livro.setPreco(Float.parseFloat(novoPreco));  // Atualiza o preço, se fornecido
                             dadosCorretos = true;
                         } catch(NumberFormatException e) {
                             System.err.println("Preço inválido! Por favor, insira um número válido.");
@@ -277,7 +347,7 @@ public class MenuLivros {
                     if (!novaData.isEmpty()) {
                         try {
                             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                            serie.setDataLancamento(LocalDate.parse(novaData, formatter));  // Atualiza a data de lançamento se fornecida
+                            livro.setDataLancamento(LocalDate.parse(novaData, formatter));  // Atualiza a data de lançamento se fornecida
                         } catch (Exception e) {
                             System.err.println("Data inválida. Valor mantido.");
                         }
@@ -290,7 +360,7 @@ public class MenuLivros {
                 char resp = console.next().charAt(0);
                 if (resp == 'S' || resp == 's') {
                     // Salva as alterações no arquivo
-                    boolean alterado = arqLivros.update(serie);
+                    boolean alterado = arqLivros.update(livro);
                     if (alterado) {
                         System.out.println("Livro alterado com sucesso.");
                     } else {
@@ -311,7 +381,7 @@ public class MenuLivros {
     }
 
 
-    public void excluirSerie() {
+    public void excluirLivro() {
         System.out.println("\nExclusão de livro");
         String isbn;
         boolean dadosCorretos = false;
@@ -324,7 +394,7 @@ public class MenuLivros {
                 return; 
 
             // Validação do ISBN (13 dígitos e composto apenas por números)
-            if (Serie.isValidNome(isbn)) 
+            if (Livro.isValidISBN13(isbn)) 
                 dadosCorretos = true;  // ISBN válido
             else 
                 System.out.println("ISBN inválido. O ISBN deve conter exatamente 13 dígitos numéricos, sem pontos e traços.");
@@ -332,16 +402,16 @@ public class MenuLivros {
 
         try {
             // Tenta ler o livro com o ID fornecido
-            Serie serie = arqSeries.readISBN(isbn);
-            if (serie != null) {
+            Livro livro = arqLivros.readISBN(isbn);
+            if (livro != null) {
                 System.out.println("Livro encontrado:");
-                mostrarSerie(serie);  // Exibe os dados do livro para confirmação
+                mostraLivro(livro);  // Exibe os dados do livro para confirmação
 
                 System.out.print("\nConfirma a exclusão do livro? (S/N) ");
                 char resp = console.next().charAt(0);  // Lê a resposta do usuário
 
                 if (resp == 'S' || resp == 's') {
-                    boolean excluido = arqSeries.delete(isbn);  // Chama o método de exclusão no arquivo
+                    boolean excluido = arqLivros.delete(isbn);  // Chama o método de exclusão no arquivo
                     if (excluido) {
                         System.out.println("Livro excluído com sucesso.");
                     } else {
@@ -361,18 +431,20 @@ public class MenuLivros {
         }
     }
 
-    public void mostrarSerie(Serie serie) {
-        if (serie != null) {
+    public void mostraLivro(Livro livro) {
+        if (livro != null) {
             System.out.println("----------------------");
-            System.out.printf("Nome......: %s%n", serie.getNome());
-            System.out.printf(".....: %s%n", serie.getSinopse());
-            System.out.printf("Streaming....: %s%n", serie.getStreaming());
-            System.out.printf("Lançamento: %s%n", serie.getDataLancamento().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            System.out.printf("ISBN......: %s%n", livro.getISBN());
+            System.out.printf("Título....: %s%n", livro.getTitulo());
+            System.out.printf("Autor.....: %s%n", livro.getAutor());
+            System.out.printf("Edição....: %s%n", livro.getEdicao());
+            System.out.printf("Lançamento: %s%n", livro.getDataLancamento().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+            System.out.printf("Preço.....: R$ %.2f%n", livro.getPreco());
             System.out.println("----------------------");
         }
     }
 
-    /*public void povoar() throws Exception {
+    public void povoar() throws Exception {
         arqLivros.create(new Livro("9788595159907", "Algoritmos: Teoria e Prática", "Thomas H. Cormen", 4, LocalDate.of(2024,2,6), 416.52F));
         arqLivros.create(new Livro("9788575225639", "Entendendo Algoritmos", "Aditya Y. Bhargava", 1, LocalDate.of(2017, 4, 24),  51.30F));
         arqLivros.create(new Livro("9788573933758", "Estruturas de Dados e Algoritmos em Java", "Lafore", 2, LocalDate.of(2005,1,1), 119.42F));
@@ -380,6 +452,6 @@ public class MenuLivros {
         arqLivros.create(new Livro("9788575228418", "Python Para Análise de Dados", "Wes McKinney", 3, LocalDate.of(2023, 3, 16), 122.55F));
         arqLivros.create(new Livro("9788550804620", "Java Efetivo: As melhores práticas para a plataforma Java", "Joshua Bloch", 3, LocalDate.of(2019,5,28), 96.98F));
         arqLivros.create(new Livro("9788522128143", "Algoritmos e Lógica de Programação", "Marco A. Furlano de Souza", 3, LocalDate.of(2019,1,10), 65.75F));
-    }*/
+    }
 
 }

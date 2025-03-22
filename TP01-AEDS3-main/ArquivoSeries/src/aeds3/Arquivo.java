@@ -64,12 +64,13 @@ public class Arquivo<T extends EntidadeArquivo> {
 
     public T read(int id) throws Exception {
         ParIDEndereco pie = indiceDireto.read(id);
-        if(pie==null)
+        if(pie==null){
             return null;
+        }
         long endereco = pie.getEndereco();
         if(endereco==-1)
             return null;
-
+        
         arquivo.seek(endereco);
         byte lapide = arquivo.readByte();
         short tamanho = arquivo.readShort();
@@ -78,8 +79,10 @@ public class Arquivo<T extends EntidadeArquivo> {
             arquivo.read(dados);
             T entidade = construtor.newInstance();
             entidade.fromByteArray(dados);
-            if(entidade.getID() == id)
+            if(entidade.getID() == id){
                 return entidade;
+            }
+
         }
         return null;
     }

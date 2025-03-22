@@ -14,8 +14,8 @@ public class ParNameSerieID implements RegistroArvoreBMais<ParNameSerieID> {
 
     private String nome;
     private int id;
-    private short TAMANHO = 34;
-    private short TAMANHO_NOME = 30;
+    private short TAMANHO = 24;
+    private short TAMANHO_NOME = 20;
 
     public ParNameSerieID() throws Exception {
         this("", -1);
@@ -31,21 +31,21 @@ public class ParNameSerieID implements RegistroArvoreBMais<ParNameSerieID> {
     
           byte[] vb = t.getBytes(StandardCharsets.UTF_8);
     
-          if(vb.length > TAMANHO_NOME) {
+          // if(vb.length > TAMANHO_NOME) {
     
-            byte[] vb2 = new byte[TAMANHO_NOME];
-            System.arraycopy(vb, 0, vb2, 0, vb2.length);
+          //   byte[] vb2 = new byte[TAMANHO_NOME];
+          //   System.arraycopy(vb, 0, vb2, 0, vb2.length);
     
-            int n = TAMANHO_NOME-1;
-            while(n>0 && (vb2[n]<0 || vb2[n]>127))
-              n--;
+          //   int n = TAMANHO_NOME-1;
+          //   while(n>0 && (vb2[n]<0 || vb2[n]>127))
+          //     n--;
     
-            byte[] vb3 = new byte[n+1];
-            System.arraycopy(vb2, 0, vb3, 0, vb3.length);
-            vb2 = vb3;
+          //   byte[] vb3 = new byte[n+1];
+          //   System.arraycopy(vb2, 0, vb3, 0, vb3.length);
+          //   vb2 = vb3;
 
-            t = new String(vb2);
-          }
+          //   t = new String(vb2);
+          // }
         }
         this.nome = t; // ID do Usuário
         this.id = i; // ID da Pergunta

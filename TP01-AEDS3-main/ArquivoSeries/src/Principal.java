@@ -1,5 +1,6 @@
 import java.util.Scanner;
 import visao.MenuLivros;
+import visao.MenuSeries;
 
 public class Principal {
 
@@ -11,10 +12,11 @@ public class Principal {
             int opcao;
             do {
 
-                System.out.println("\n\nPUCBook 1.0");
+                System.out.println("\n\nPUCFlix 1.0");
                 System.out.println( "-----------");
                 System.out.println("> Início");
                 System.out.println("\n1 - Livros");
+                System.out.println("2 - Series");
                 System.out.println("9 - Povoar");
                 System.out.println("0 - Sair");
 
@@ -29,8 +31,11 @@ public class Principal {
                     case 1:
                         (new MenuLivros()).menu();
                         break;
+                    case 2:
+                        (new MenuSeries()).menu();
+                        break;
                     case 9:
-                        //(new MenuLivros()).povoar();
+                        (new MenuLivros()).povoar();
                         break;
                     case 0:
                         break;
