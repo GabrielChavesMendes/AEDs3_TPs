@@ -45,6 +45,9 @@ public class MenuSeries {
                 case 3:
                     alterarSerie();
                     break;
+                case 4:
+                    excluirSerie();
+                    break;
                 case 0:
                     break;
                 default:
@@ -246,6 +249,62 @@ public class MenuSeries {
             }
         } catch (Exception e) {
             System.out.println("Erro do sistema. Não foi possível buscar a série!");
+            e.printStackTrace();
+        }
+    }
+
+    public void excluirSerie() {
+        System.out.println("\nExclusão de série");
+        System.out.print("\nNome da série a ser excluída: ");
+        String nome = console.nextLine();
+        
+        try {
+            Serie[] series = arqSeries.readNome(nome);
+            
+            if(series == null || series.length == 0) {
+                System.out.println("Nenhuma série encontrada com esse nome.");
+                return;
+            }
+            
+            // Mostra as séries encontradas
+            System.out.println("\nSéries encontradas:");
+            for(int i = 0; i < series.length; i++) {
+                System.out.println((i+1) + " - " + series[i].getNome());
+            }
+            
+            // Pede para selecionar qual excluir
+            System.out.print("\nDigite o número da série a ser excluída (0 para cancelar): ");
+            int opcao;
+            try {
+                opcao = Integer.parseInt(console.nextLine());
+            } catch(NumberFormatException e) {
+                opcao = -1;
+            }
+            
+            if(opcao <= 0 || opcao > series.length) {
+                System.out.println("Operação cancelada ou seleção inválida.");
+                return;
+            }
+            
+            Serie serieSelecionada = series[opcao-1];
+            System.out.println("\nDados da série a ser excluída:");
+            mostraSerie(serieSelecionada);
+            
+            System.out.print("\nConfirma a exclusão desta série? (S/N): ");
+            char confirmacao = console.nextLine().toUpperCase().charAt(0);
+            
+            if(confirmacao == 'S') {
+                boolean sucesso = arqSeries.delete(serieSelecionada);
+                if(sucesso) {
+                    System.out.println("Série excluída com sucesso!");
+                } else {
+                    System.out.println("Falha ao excluir a série.");
+                }
+            } else {
+                System.out.println("Exclusão cancelada.");
+            }
+        } catch(Exception e) {
+            System.out.println("Erro do sistema. Não foi possível completar a operação.");
             e.printStackTrace();
         }
     }
