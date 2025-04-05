@@ -439,7 +439,7 @@ public class MenuLivros {
             System.out.printf("Autor.....: %s%n", livro.getAutor());
             System.out.printf("Edição....: %s%n", livro.getEdicao());
             System.out.printf("Lançamento: %s%n", livro.getDataLancamento().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-            System.out.printf("Preço.....: R$ %.2f%n", livro.getPreco());
+            System.out.printf("Preço.....: %.2f%n", livro.getPreco());
             System.out.println("----------------------");
         }
     }

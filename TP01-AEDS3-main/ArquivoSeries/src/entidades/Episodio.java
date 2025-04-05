@@ -5,7 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.time.LocalDate;
-
+import java.time.LocalTime;
 import aeds3.EntidadeArquivo;
 
 public class Episodio implements EntidadeArquivo {
@@ -15,7 +15,7 @@ public class Episodio implements EntidadeArquivo {
     private String nome;
     private int temporada;
     private LocalDate dataLancamento;
-    private int duracao; // Em minutos
+    private LocalTime duracao; 
 
     public Episodio() {
         this.id = -1;
@@ -23,10 +23,10 @@ public class Episodio implements EntidadeArquivo {
         this.nome = "";
         this.temporada = 0;
         this.dataLancamento = LocalDate.now();
-        this.duracao = 0;
+        this.duracao = LocalTime.now();
     }
 
-    public Episodio(int idSerie, String nome, int temporada, LocalDate dataLancamento, int duracao) throws Exception {
+    public Episodio(int idSerie, String nome, int temporada, LocalDate dataLancamento, LocalTime duracao) throws Exception {
         if (idSerie < 0) {
             throw new Exception("Episódio deve estar vinculado a uma série válida.");
         }
@@ -82,15 +82,15 @@ public class Episodio implements EntidadeArquivo {
         this.dataLancamento = dataLancamento;
     }
 
-    public int getDuracao() {
+    public LocalTime getDuracao() {
         return duracao;
     }
 
-    public void setDuracao(int duracao) {
+    public void setDuracao(LocalTime duracao) {
         this.duracao = duracao;
     }
 
-    public byte[] toByteArray() throws Exception {//convertendo para array de bytes
+    public byte[] toByteArray() throws Exception {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DataOutputStream dos = new DataOutputStream(baos);
         dos.writeInt(id);
@@ -98,11 +98,11 @@ public class Episodio implements EntidadeArquivo {
         dos.writeUTF(nome);
         dos.writeInt(temporada);
         dos.writeInt((int) dataLancamento.toEpochDay());
-        dos.writeInt(duracao);
+        dos.writeInt(duracao.toSecondOfDay()); 
         return baos.toByteArray();
     }
-
-    public void fromByteArray(byte[] vb) throws Exception {//pegando de um array de bytes
+    
+    public void fromByteArray(byte[] vb) throws Exception {
         ByteArrayInputStream bais = new ByteArrayInputStream(vb);
         DataInputStream dis = new DataInputStream(bais);
         id = dis.readInt();
@@ -110,6 +110,6 @@ public class Episodio implements EntidadeArquivo {
         nome = dis.readUTF();
         temporada = dis.readInt();
         dataLancamento = LocalDate.ofEpochDay(dis.readInt());
-        duracao = dis.readInt();
+        duracao = LocalTime.ofSecondOfDay(dis.readInt()); 
     }
 }

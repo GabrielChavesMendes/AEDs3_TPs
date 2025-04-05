@@ -256,56 +256,53 @@ public class MenuSeries {
     public void excluirSerie() {
         System.out.println("\nExclusão de série");
         System.out.print("\nNome da série a ser excluída: ");
-        String nome = console.nextLine();
+        String nome = console.nextLine();  
+        if (nome.isEmpty()) {
+            System.out.println("Nome vazio ou inválido!");
+            return;
+        }
         
         try {
             Serie[] series = arqSeries.readNome(nome);
-            
-            if(series == null || series.length == 0) {
-                System.out.println("Nenhuma série encontrada com esse nome.");
-                return;
-            }
-            
-            // Mostra as séries encontradas
-            System.out.println("\nSéries encontradas:");
-            for(int i = 0; i < series.length; i++) {
-                System.out.println((i+1) + " - " + series[i].getNome());
-            }
-            
-            // Pede para selecionar qual excluir
-            System.out.print("\nDigite o número da série a ser excluída (0 para cancelar): ");
-            int opcao;
-            try {
-                opcao = Integer.parseInt(console.nextLine());
-            } catch(NumberFormatException e) {
-                opcao = -1;
-            }
-            
-            if(opcao <= 0 || opcao > series.length) {
-                System.out.println("Operação cancelada ou seleção inválida.");
-                return;
-            }
-            
-            Serie serieSelecionada = series[opcao-1];
-            System.out.println("\nDados da série a ser excluída:");
-            mostraSerie(serieSelecionada);
-            
-            System.out.print("\nConfirma a exclusão desta série? (S/N): ");
-            char confirmacao = console.nextLine().toUpperCase().charAt(0);
-            
-            if(confirmacao == 'S') {
-                boolean sucesso = arqSeries.delete(serieSelecionada);
-                if(sucesso) {
-                    System.out.println("Série excluída com sucesso!");
-                } else {
-                    System.out.println("Falha ao excluir a série.");
+            if (series != null && series.length > 0) {
+                int n = 1;
+                for (Serie s : series) {
+                    System.out.println((n++) + ": " + s);
+                }
+                
+                System.out.print("Escolha a série para excluir: ");
+                int o;
+                do { 
+                    try {
+                        o = Integer.valueOf(console.nextLine());
+                    } catch (NumberFormatException e) {
+                        o = -1;
+                    }
+                    if (o <= 0 || o > n - 1)
+                        System.out.println("Escolha um número entre 1 e " + (n - 1));
+                } while (o <= 0 || o > n - 1);
+                
+                Serie serieSelecionada = series[o - 1];
+                System.out.print("\nConfirma a exclusão da série? (S/N) ");
+                char resp = console.nextLine().charAt(0);
+                if (resp == 'S' || resp == 's') {
+                    try {
+                        if (arqSeries.delete(serieSelecionada.getID())) {
+                            System.out.println("Série excluída com sucesso.");
+                        } else {
+                            System.out.println("Erro ao excluir a série.");
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Erro do sistema. Não foi possível excluir a série!");
+                    }
                 }
             } else {
-                System.out.println("Exclusão cancelada.");
+                System.out.println("Nenhuma série encontrada com esse nome.");
             }
-        } catch(Exception e) {
-            System.out.println("Erro do sistema. Não foi possível completar a operação.");
+        } catch (Exception e) {
+            System.out.println("Erro do sistema. Não foi possível buscar a série!");
             e.printStackTrace();
         }
     }
+
 }

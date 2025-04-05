@@ -23,54 +23,33 @@ public class ArquivoSeries extends Arquivo<Serie> {
         return id;
     }
 
-    public Serie[] readNome(String nome) throws Exception {
-        if(nome == null || nome.isEmpty())
+    public Serie[] readNome(String nome) throws Exception {//busca
+        if(nome.length()==0)
             return new Serie[0];
-            
         ArrayList<ParNameSerieID> ptis = indiceNome.read(new ParNameSerieID(nome, -1));
-        if(ptis != null && !ptis.isEmpty()) {
+        if(ptis.size()>0) {
             Serie[] series = new Serie[ptis.size()];
-            for(int i = 0; i < ptis.size(); i++) {
-                series[i] = read(ptis.get(i).getId());
+            int j = 0;
+            for(int i = 0; i < ptis.size(); i++){
+                series[j] = read(ptis.get(i).getId());
+                j++;
             }
             return series;
-        }
-        return new Serie[0];
+        }else 
+            return new Serie[0];
     }
 
     @Override
-    public boolean delete(int id) throws Exception {
-        Serie s = read(id);
-        if(s != null) {
-            // Primeiro remove do índice
-            boolean removedFromIndex = indiceNome.delete(new ParNameSerieID(s.getNome(), id));
-            // Depois remove do arquivo principal
-            boolean removedFromFile = super.delete(id);
-            return removedFromIndex && removedFromFile;
+    public boolean delete(int id) throws Exception {//delete por id
+        Serie s = read(id);   // na superclasse
+        if(s!=null) {
+            if(super.delete(id))
+                return indiceNome.delete(new ParNameSerieID(s.getNome(), id));
         }
         return false;
     }
 
-    public boolean delete(Serie serie) throws Exception {
-        if(serie != null) {
-            return delete(serie.getID());
-        }
-        return false;
-    }
-
-    public int deletePorNome(String nome) throws Exception {
-        if(nome == null || nome.isEmpty())
-            return 0;
-            
-        Serie[] series = readNome(nome);
-        int count = 0;
-        for(Serie s : series) {
-            if(delete(s.getID())) {
-                count++;
-            }
-        }
-        return count;
-    }
+    //delete por nome?
 
     @Override
     public boolean update(Serie novaSerie) throws Exception {
@@ -86,6 +65,4 @@ public class ArquivoSeries extends Arquivo<Serie> {
         }
         return false;
     }
-
-
 }
