@@ -1,7 +1,6 @@
 import java.util.Scanner;
 
 import visao.MenuEpisodio;
-import visao.MenuLivros;
 import visao.MenuSeries;
 
 public class Principal {
@@ -17,10 +16,8 @@ public class Principal {
                 System.out.println("\n\nPUCFlix 1.0");
                 System.out.println( "-----------");
                 System.out.println("> Início");
-                System.out.println("\n1 - Livros");
-                System.out.println("2 - Series");
-                System.out.println("3 - Episodio");
-                System.out.println("9 - Povoar");
+                System.out.println("\n1 - Series");
+                System.out.println("2 - Episodio");
                 System.out.println("0 - Sair");
 
                 System.out.print("\nOpção: ");
@@ -32,16 +29,10 @@ public class Principal {
 
                 switch (opcao) {
                     case 1:
-                        (new MenuLivros()).menu();
-                        break;
-                    case 2:
                         (new MenuSeries()).menu();
                         break;
-                    case 3:
+                    case 2:
                         (new MenuEpisodio()).menu();
-                        break;
-                    case 9:
-                        (new MenuLivros()).povoar();
                         break;
                     case 0:
                         break;
