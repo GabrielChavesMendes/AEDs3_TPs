@@ -1,11 +1,10 @@
 package entidades;
+import aeds3.EntidadeArquivo;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.time.LocalDate;
-
-import aeds3.EntidadeArquivo;
 
 
 public class Ator implements EntidadeArquivo {
@@ -22,6 +21,15 @@ public class Ator implements EntidadeArquivo {
         this.dataNascimento = dataNascimento;
         
     }
+
+    public Ator() {
+        this.id = -1;
+        this.idSerie = -1;
+        this.nome = "";
+        this.nacionalidade = "";
+        this.dataNascimento = LocalDate.now();
+    }
+    
 
     //Construtor alternativo (caso queira criar sem data de nascimento ou genero)
     public Ator(int id, String nome) {
