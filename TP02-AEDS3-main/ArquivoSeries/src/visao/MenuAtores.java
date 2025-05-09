@@ -1,117 +1,148 @@
 package visao;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Scanner;
-
 import entidades.Ator;
+import java.time.LocalDate;
+import java.util.Scanner;
 import modelo.ArquivoAtores;
 
 public class MenuAtores {
 
-    private ArquivoAtores arqAtores;
-    private static Scanner console = new Scanner(System.in);
+    private ArquivoAtores arquivo;
+    private Scanner scanner;
 
-    public MenuAtores() throws Exception {
-        arqAtores = new ArquivoAtores();
+    public MenuAtores() {
+        try {
+            arquivo = new ArquivoAtores();
+        } catch (Exception e) {
+            System.out.println("Erro ao inicializar o arquivo de atores: " + e.getMessage());
+        }
+        scanner = new Scanner(System.in);
     }
 
-    public void menu() {
-        int opcao;
-        do {
-            System.out.println("\n\nPUCFlix 1.0");
-            System.out.println("-----------");
-            System.out.println("> Início > Atores");
-            System.out.println("\n1 - Incluir");
-            System.out.println("2 - Excluir");
-            System.out.println("0 - Voltar ao menu anterior");
+    public void exibirMenu() {
+        int opcao = -1;
 
-            System.out.print("\nOpção: ");
-            try {
-                opcao = Integer.parseInt(console.nextLine());
-            } catch (NumberFormatException e) {
-                opcao = -1;
-            }
+        while (opcao != 0) {
+            System.out.println("\n----- MENU DE ATORES -----");
+            System.out.println("1 - Cadastrar ator");
+            //System.out.println("2 - Buscar ator por nome");
+            //System.out.println("3 - Atualizar ator");
+            System.out.println("2 - Remover ator");
+            //System.out.println("5 - Listar todos os atores");
+            System.out.println("0 - Voltar");
+            System.out.print("Escolha uma opção: ");
+
+            opcao = Integer.parseInt(scanner.nextLine());
 
             switch (opcao) {
-                case 1:
-                    incluirAtor();
-                    break;
-                case 2:
-                    excluirAtor();
-                    break;
-                case 0:
-                    break;
-                default:
-                    System.out.println("Opção inválida!");
-            }
-        } while (opcao != 0);
-    }
-
-    private void incluirAtor() {
-        System.out.println("\nInclusão de ator");
-        String nome, nacionalidade;
-        LocalDate dataNascimento = null;
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-        System.out.print("Nome: ");
-        nome = console.nextLine();
-
-        System.out.print("Nacionalidade: ");
-        nacionalidade = console.nextLine();
-
-        boolean dataValida = false;
-        do {
-            System.out.print("Data de nascimento (DD/MM/AAAA): ");
-            String dataStr = console.nextLine();
-            try {
-                dataNascimento = LocalDate.parse(dataStr, formatter);
-                dataValida = true;
-            } catch (Exception e) {
-                System.err.println("Data inválida! Use o formato DD/MM/AAAA.");
-            }
-        } while (!dataValida);
-
-        System.out.print("\nConfirma a inclusão do ator? (S/N) ");
-        char resp = console.nextLine().charAt(0);
-        if (resp == 'S' || resp == 's') {
-            try {
-                Ator ator = new Ator(-1, nome, nacionalidade, dataNascimento);
-                arqAtores.create(ator);
-                System.out.println("Ator incluído com sucesso.");
-            } catch (Exception e) {
-                System.out.println("Erro do sistema. Não foi possível incluir o ator!");
-                e.printStackTrace();
+                case 1 -> cadastrar();
+                //case 2 -> buscarPorNome();
+                //case 3 -> atualizar();
+                case 2 -> remover();
+                //case 5 -> listarTodos();
+                case 0 -> System.out.println("Retornando...");
+                default -> System.out.println("Opção inválida.");
             }
         }
     }
 
-    private void excluirAtor() {
-        System.out.println("\nExclusão de ator");
-        System.out.print("ID do ator a ser excluído: ");
-        int id;
+    private void cadastrar() {
         try {
-            id = Integer.parseInt(console.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("ID inválido.");
-            return;
-        }
+            System.out.print("Nome: ");
+            String nome = scanner.nextLine();
+            System.out.print("Nacionalidade: ");
+            String nacionalidade = scanner.nextLine();
+            System.out.print("Data de nascimento (AAAA-MM-DD): ");
+            LocalDate dataNascimento = LocalDate.parse(scanner.nextLine());
 
-        System.out.print("Confirma a exclusão do ator com ID " + id + "? (S/N) ");
-        char resp = console.nextLine().charAt(0);
-        if (resp == 'S' || resp == 's') {
-            try {
-                if (arqAtores.delete(id)) {
-                    System.out.println("Ator excluído com sucesso.");
-                } else {
-                    System.out.println("Ator não encontrado.");
-                }
-            } catch (Exception e) {
-                System.out.println("Erro do sistema. Não foi possível excluir o ator.");
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("Operação cancelada.");
+            Ator ator = new Ator(-1, nome, nacionalidade, dataNascimento);
+            int id = arquivo.create(ator);
+            System.out.println("Ator cadastrado com ID: " + id);
+
+        } catch (Exception e) {
+            System.out.println("Erro ao cadastrar ator: " + e.getMessage());
         }
+    }
+
+    private void buscarPorNome() {
+        try {
+            System.out.print("Nome a buscar: ");
+            String nome = scanner.nextLine();
+            Ator[] atores = arquivo.readNome(nome);
+
+            if (atores.length == 0) {
+                System.out.println("Nenhum ator encontrado.");
+            } else {
+                for (Ator ator : atores) {
+                    exibirAtor(ator);
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println("Erro ao buscar ator: " + e.getMessage());
+        }
+    }
+
+    private void atualizar() {
+        try {
+            System.out.print("ID do ator a atualizar: ");
+            int id = Integer.parseInt(scanner.nextLine());
+            Ator ator = arquivo.read(id);
+
+            if (ator == null) {
+                System.out.println("Ator não encontrado.");
+                return;
+            }
+
+            exibirAtor(ator);
+
+            System.out.print("Novo nome: ");
+            String nome = scanner.nextLine();
+            System.out.print("Nova nacionalidade: ");
+            String nacionalidade = scanner.nextLine();
+            System.out.print("Nova data de nascimento (AAAA-MM-DD): ");
+            LocalDate dataNascimento = LocalDate.parse(scanner.nextLine());
+
+            ator.setNome(nome);
+            ator.setNacionalidade(nacionalidade);
+            ator.setDataNascimento(dataNascimento);
+
+            boolean sucesso = arquivo.update(ator);
+            if (sucesso) {
+                System.out.println("Ator atualizado com sucesso.");
+            } else {
+                System.out.println("Falha na atualização.");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Erro ao atualizar ator: " + e.getMessage());
+        }
+    }
+
+    private void remover() {
+        try {
+            System.out.print("ID do ator a remover: ");
+            int id = Integer.parseInt(scanner.nextLine());
+
+            boolean sucesso = arquivo.delete(id);
+            if (sucesso) {
+                System.out.println("Ator removido com sucesso.");
+            } else {
+                System.out.println("Ator não encontrado.");
+            }
+
+        } catch (Exception e) {
+            System.out.println("Erro ao remover ator: " + e.getMessage());
+        }
+    }
+
+    
+
+    private void exibirAtor(Ator ator) {
+        System.out.println("--------------------------");
+        System.out.println("ID: " + ator.getID());
+        System.out.println("Nome: " + ator.getNome());
+        System.out.println("Nacionalidade: " + ator.getNacionalidade());
+        System.out.println("Data de nascimento: " + ator.getDataNascimento());
     }
 }
