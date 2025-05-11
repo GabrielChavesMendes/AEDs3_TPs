@@ -1,6 +1,7 @@
 import java.util.Scanner;
 import visao.MenuAtores;
 import visao.MenuEpisodio;
+import visao.MenuRelacoesAtorSerie;
 import visao.MenuSeries;
 
 public class Principal {
@@ -19,6 +20,7 @@ public class Principal {
                 System.out.println("\n1 - Series");
                 System.out.println("2 - Episodio");
                 System.out.println("3 - Atores");
+                System.out.println("4 - Incluir ator em série");
                 System.out.println("0 - Sair");
 
                 System.out.print("\nOpção: ");
@@ -37,6 +39,9 @@ public class Principal {
                         break;
                     case 3: 
                         (new MenuAtores()).exibirMenu();
+                        break;
+                    case 4: 
+                        (new MenuRelacoesAtorSerie()).exibirMenu();
                         break;
                     case 0:
                         break;
