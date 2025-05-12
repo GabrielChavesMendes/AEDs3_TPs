@@ -100,4 +100,12 @@ public class Ator implements EntidadeArquivo {
         dataNascimento = LocalDate.ofEpochDay(dis.readInt());
          
     }
+    @Override
+    public String toString() {
+         return "ID: " + id +
+           ", ID da Série: " + idSerie +
+           ", Nome: " + nome +
+           ", Nacionalidade: " + nacionalidade +
+           ", Nascimento: " + dataNascimento;
+    }
 }

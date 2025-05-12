@@ -47,9 +47,9 @@ public class MenuAtores {
             switch (opcao) {
                 case 1 -> cadastrar();
                 case 2 -> buscarPorNome();
-                //case 3 -> atualizar();
+                case 3 -> atualizar();
                 case 4 -> remover();
-                //case 5 -> listarTodos();
+                case 5 -> listarTodos();
                 case 0 -> System.out.println("Retornando...");
                 default -> System.out.println("Opção inválida.");
             }
@@ -67,8 +67,6 @@ public class MenuAtores {
 
             Ator ator = new Ator(-1, nome, nacionalidade, dataNascimento);
             int id = arquivo.create(ator);
-            arvore.create(new ParNameAtorID(nome, id));
-            arvore.print();
             System.out.println("Ator cadastrado com ID: " + id);
             
         } catch (Exception e) {
@@ -81,12 +79,9 @@ public class MenuAtores {
             System.out.print("Nome a buscar: ");
             String nome = scanner.nextLine();
             Ator[] atores = arquivo.readNome(nome);
-            //busca por nome na arvore
-           ArrayList<ParNameAtorID> lista = arvore.read(new ParNameAtorID(nome, -1));
-            System.out.print("Resposta: ");
-            for (int i = 0; i < lista.size(); i++)
-              System.out.print(lista.get(i) + " ");
-
+            for (int i = 0; i < atores.length; i++ ){
+                System.out.println(atores[i]);
+            }
         } catch (Exception e) {
             System.out.println("Erro ao buscar ator: " + e.getMessage());
         }
@@ -96,6 +91,9 @@ public class MenuAtores {
         try {
             System.out.print("ID do ator a atualizar: ");
             int id = Integer.parseInt(scanner.nextLine());
+            
+            
+            System.out.println("Digite o nome do ator:");
             Ator ator = arquivo.read(id);
 
             if (ator == null) {
@@ -103,8 +101,8 @@ public class MenuAtores {
                 return;
             }
 
-            exibirAtor(ator);
-
+           
+            System.out.println(ator);
             System.out.print("Novo nome: ");
             String nome = scanner.nextLine();
             System.out.print("Nova nacionalidade: ");
@@ -134,8 +132,8 @@ public class MenuAtores {
             int id = Integer.parseInt(scanner.nextLine());
             System.out.print("Nome: ");
             String nome = scanner.nextLine();
-            arvore.delete(new ParNameAtorID(nome, id));
-            arvore.print();
+            /*arvore.delete(new ParNameAtorID(nome, id));
+            arvore.print();*/
             boolean sucesso = arquivo.delete(id);
             if (sucesso) {
                 System.out.println("Ator removido com sucesso.");
@@ -148,18 +146,34 @@ public class MenuAtores {
         }
     }
 
-    
+    private void listarTodos() {
+    try {
+        System.out.println("\n--- Lista de Todos os Atores ---");
+        ArrayList<ParNameAtorID> pares = arvore.read(null); // read(null) retorna todos os registros
 
-    private void exibirAtor(Ator ator) {
-        /*System.out.println("--------------------------");
-        System.out.println("ID: " + ator.getID());
-        System.out.println("Nome: " + ator.getNome());
-        System.out.println("Nacionalidade: " + ator.getNacionalidade());
-        System.out.println("Data de nascimento: " + ator.getDataNascimento());
-        ArrayList<ParNameAtorID> lista = arvore.read(null);
-            for (int i = 0; i < lista.size(); i++){
-                System.out.print(lista.get(i) + " ");
+        if (pares == null || pares.isEmpty()) {
+            System.out.println("Nenhum ator encontrado.");
+            return;
+        }
+
+        ArrayList<Integer> idsUnicos = new ArrayList<>();
+        for (ParNameAtorID par : pares) {
+            if (!idsUnicos.contains(par.getId())) {
+                idsUnicos.add(par.getId());
             }
-                */ 
+        }
+
+        for (int id : idsUnicos) {
+            Ator ator = arquivo.read(id);
+            if (ator != null && ator.getNome() != null && !ator.getNome().isEmpty()) {
+                System.out.println(ator);
+            }
+        }
+
+    } catch (Exception e) {
+        System.out.println("Erro ao listar todos os atores: " + e.getMessage());
     }
+}
+
+
 }
