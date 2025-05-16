@@ -70,8 +70,8 @@ public class MenuRelacoesAtorSerie {
 
             switch (opcao) {
                 case 1 -> adicionarRelacionamento();
-                case 2 -> listarSeriesPorAtor();
-                case 3 -> listarAtoresPorSerie();
+               // case 2 -> listarSeriesPorAtor();
+               // case 3 -> listarAtoresPorSerie();
                 case 0 -> System.out.println("Voltando ao menu principal.");
                 default -> System.out.println("Opção inválida.");
             }
@@ -101,7 +101,8 @@ public class MenuRelacoesAtorSerie {
             System.out.println("Erro: " + e.getMessage());
         }
     }
-    //vai ser excluida essa opcao
+    //vai ser excluida essa opcao  
+    /* 
     private void removerRelacionamento() {
         try {
             System.out.print("ID do ator: ");
@@ -116,8 +117,9 @@ public class MenuRelacoesAtorSerie {
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
         }
-    }
+    }*/
 
+    /*
     private void listarSeriesPorAtor() {
         System.out.println("\nBUSCA");
         try {
@@ -127,7 +129,6 @@ public class MenuRelacoesAtorSerie {
             System.out.print("Resposta: ");
             for (int i = 0; i < lista.size(); i++)
               System.out.print(lista.get(i) + " ");
-            /*
             int[] series = arquivoRelacoes.buscarSeriesPorAtor(idAtor);
             if (series.length == 0) {
                 System.out.println("Nenhuma série encontrada para este ator.");
@@ -138,12 +139,12 @@ public class MenuRelacoesAtorSerie {
                 Serie s = arquivoSeries.read(idSerie);
                 if (s != null)
                     System.out.println(idSerie + " - " + s.getNome());
+                } catch (Exception e) {
+                    System.out.println("Erro: " + e.getMessage());
+                }
+            }
             }*/
-        } catch (Exception e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
-
+    /* 
     private void listarAtoresPorSerie() {
         try {
             System.out.print("ID da série: ");
@@ -155,5 +156,5 @@ public class MenuRelacoesAtorSerie {
         } catch (Exception e) {
             System.out.println("Erro: " + e.getMessage());
         }
-    }
+    }*/
 }

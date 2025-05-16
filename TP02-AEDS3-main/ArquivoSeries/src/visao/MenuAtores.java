@@ -11,18 +11,22 @@ import aeds3.ArvoreBMais;
 import modelo.ArquivoAtores;
 import modelo.ParIdIdAS;
 import modelo.ParNameAtorID;
+import modelo.ParIdIdAS;
 
 public class MenuAtores {
 
     private ArquivoAtores arquivo;
     private Scanner scanner;
     ArvoreBMais<ParNameAtorID> arvore;
+    ArvoreBMais<ParIdIdAS> arvore2;
     public MenuAtores() {
         try {
             arquivo = new ArquivoAtores();
             File d = new File("dados/Arvores");
             if(!d.exists()){d.mkdir();}
             arvore=new ArvoreBMais<>(ParNameAtorID.class.getConstructor(),5,"dados/Arvores/arvoreAtorNomeId.db");
+            arvore2 = new ArvoreBMais<>(ParIdIdAS.class.getConstructor(), 5, "dados/Arvores/arvoreAtorSerie.db");
+
         } catch (Exception e) {
             System.out.println("Erro ao inicializar o arquivo de atores: " + e.getMessage());
         }
@@ -39,6 +43,7 @@ public class MenuAtores {
             System.out.println("3 - Atualizar ator");
             System.out.println("4 - Remover ator");
             System.out.println("5 - Listar todos os atores");
+             System.out.println("6 - Listar a serie de cada ator");
             System.out.println("0 - Voltar");
             System.out.print("Escolha uma opção: ");
 
@@ -50,6 +55,7 @@ public class MenuAtores {
                 case 3 -> atualizar();
                 case 4 -> remover();
                 case 5 -> listarTodos();
+                case 6 -> listarSeriesPorAtor();
                 case 0 -> System.out.println("Retornando...");
                 default -> System.out.println("Opção inválida.");
             }
@@ -174,6 +180,31 @@ public class MenuAtores {
         System.out.println("Erro ao listar todos os atores: " + e.getMessage());
     }
 }
+private void listarSeriesPorAtor() {
+        System.out.println("\nBUSCA");
+        try {
+            System.out.print("ID do ator: ");
+            int idAtor = Integer.parseInt(scanner.nextLine());
+            ArrayList<ParIdIdAS> lista = arvore2.read(new ParIdIdAS(idAtor, -1));
+            System.out.print("Resposta: ");
+            for (int i = 0; i < lista.size(); i++)
+              System.out.print(lista.get(i) + " ");
+            /*
+            int[] series = arquivoRelacoes.buscarSeriesPorAtor(idAtor);
+            if (series.length == 0) {
+                System.out.println("Nenhuma série encontrada para este ator.");
+                return;
+            } 
+            System.out.println("Séries desse ator:");
+            for (int idSerie : series) {
+                Serie s = arquivoSeries.read(idSerie);
+                if (s != null)
+                    System.out.println(idSerie + " - " + s.getNome());
+            }*/
+        } catch (Exception e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
+    }
 
 
 }

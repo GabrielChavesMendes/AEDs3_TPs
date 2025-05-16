@@ -1,15 +1,4 @@
-
-/*
-Esta classe representa um objeto para uma entidade
-que será armazenado em uma árvore B+
-
-Neste caso em particular, este objeto é representado
-por dois números inteiros para que possa conter
-relacionamentos entre dois IDs de entidades quaisquer
- 
-Implementado pelo Prof. Marcos Kutova
-v1.0 - 2021
-*/
+//series e atores
 package modelo;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

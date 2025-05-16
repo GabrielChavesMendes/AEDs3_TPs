@@ -1,23 +1,37 @@
 package visao;
 import entidades.Episodio;
 import entidades.Serie;
+
+import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import aeds3.ArvoreBMais;
 import aeds3.ParIdId;
 import modelo.ArquivoEpisodios;
 import modelo.ArquivoSeries;
+import modelo.ParIdIdAS;
+import modelo.ParIdIdSA;
 
 public class MenuSeries {
 
     ArquivoSeries arqSeries;
     private static Scanner console = new Scanner(System.in);
-
+    ArvoreBMais<ParIdIdSA> arvore2;
     public MenuSeries() throws Exception {
         arqSeries = new ArquivoSeries();
+
+        File d = new File("dados/Arvores");
+         if(!d.exists()){d.mkdir();}
+        arvore2 = new ArvoreBMais<ParIdIdSA>(
+        ParIdIdSA.class.getConstructor(),
+        5,
+        "dados/Arvores/arvoreSerieAtor.db"
+        );
+
     }
 
     public void menu() {
@@ -32,6 +46,7 @@ public class MenuSeries {
             System.out.println("2 - Buscar");
             System.out.println("3 - Alterar");
             System.out.println("4 - Excluir");
+            System.out.println("5 - Listar os atores de cada Série");
             System.out.println("0 - Voltar ao menu anterior");
 
             System.out.print("\nOpção: ");
@@ -54,6 +69,9 @@ public class MenuSeries {
                 case 4:
                     excluirSerie();
                     break;
+                case 5:
+                   listarAtoresPorSerie();
+                   break;
                 case 0:
                     break;
                 default:
@@ -331,5 +349,17 @@ public void excluirSerie() {
         e.printStackTrace();
     }
 }
+private void listarAtoresPorSerie() {
+        try {
+            System.out.print("ID da série: ");
+            int idSerie = Integer.parseInt(console.nextLine());
+            ArrayList<ParIdIdSA> lista = arvore2.read(new ParIdIdSA(idSerie, -1));
+            System.out.print("Resposta: ");
+            for (int i = 0; i < lista.size(); i++)
+              System.out.print(lista.get(i) + " ");
+        } catch (Exception e) {
+            System.out.println("Erro: " + e.getMessage());
+        }
+    }
 
 }
