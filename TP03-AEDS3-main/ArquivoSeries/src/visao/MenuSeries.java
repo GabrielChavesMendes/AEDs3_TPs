@@ -1,20 +1,37 @@
 package visao;
 import entidades.Episodio;
 import entidades.Serie;
+
+import java.io.File;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
+import aeds3.ArvoreBMais;
+import aeds3.ParIdId;
 import modelo.ArquivoEpisodios;
 import modelo.ArquivoSeries;
+import modelo.ParIdIdAS;
+import modelo.ParIdIdSA;
 
 public class MenuSeries {
 
     ArquivoSeries arqSeries;
     private static Scanner console = new Scanner(System.in);
-
+    ArvoreBMais<ParIdIdSA> arvore2;
     public MenuSeries() throws Exception {
         arqSeries = new ArquivoSeries();
+
+        File d = new File("dados/Arvores");
+         if(!d.exists()){d.mkdir();}
+        arvore2 = new ArvoreBMais<ParIdIdSA>(
+        ParIdIdSA.class.getConstructor(),
+        5,
+        "dados/Arvores/arvoreSerieAtor.db"
+        );
+
     }
 
     public void menu() {
@@ -29,6 +46,7 @@ public class MenuSeries {
             System.out.println("2 - Buscar");
             System.out.println("3 - Alterar");
             System.out.println("4 - Excluir");
+            System.out.println("5 - Listar os atores de cada Série");
             System.out.println("0 - Voltar ao menu anterior");
 
             System.out.print("\nOpção: ");
@@ -51,6 +69,9 @@ public class MenuSeries {
                 case 4:
                     excluirSerie();
                     break;
+                case 5:
+                   listarAtoresPorSerie();
+                   break;
                 case 0:
                     break;
                 default:
@@ -256,74 +277,89 @@ public class MenuSeries {
         }
     }
 
-    public void excluirSerie() {
-        System.out.println("\nExclusão de série");
-        System.out.print("\nNome da série a ser excluída: ");
-        String nome = console.nextLine();  
-        if (nome.isEmpty()) {
-            System.out.println("Nome vazio ou inválido!");
+public void excluirSerie() {
+    System.out.println("\nExclusão de série");
+    System.out.print("\nNome da série a ser excluída: ");
+    String nome = console.nextLine();  
+    if (nome.isEmpty()) {
+        System.out.println("Nome vazio ou inválido!");
+        return;
+    }
+    
+    try {
+        // Buscar a série pelo nome
+        Serie[] series = arqSeries.readNome(nome);
+        
+        if (series == null || series.length == 0) {
+            System.out.println("Nenhuma série encontrada com esse nome.");
             return;
         }
         
-        try {
-            // Busca a série pelo nome
-            Serie[] series = arqSeries.readNome(nome);
-            if (series == null || series.length == 0) {
-                System.out.println("Nenhuma série encontrada com esse nome.");
-                return;
-            }
-            
-            // Mostra as séries encontradas
-            System.out.println("\nSéries encontradas:");
+        // Se houver mais de uma série com o mesmo nome
+        Serie serieSelecionada;
+        if (series.length > 1) {
+            System.out.println("\nForam encontradas várias séries:");
             for (int i = 0; i < series.length; i++) {
-                System.out.println((i+1) + " - " + series[i].getNome());
+                System.out.println((i+1) + " - " + series[i].getNome() + 
+                                 " (ID: " + series[i].getID() + ")");
             }
             
-            // Solicita seleção
-            System.out.print("Escolha a série para excluir (1-" + series.length + "): ");
+            System.out.print("\nSelecione a série desejada (1-" + series.length + "): ");
             int escolha;
-            do {
-                try {
-                    escolha = Integer.parseInt(console.nextLine());
-                } catch (NumberFormatException e) {
-                    escolha = -1;
+            try {
+                escolha = Integer.parseInt(console.nextLine());
+                if (escolha < 1 || escolha > series.length) {
+                    System.out.println("Opção inválida. Operação cancelada.");
+                    return;
                 }
-                if (escolha <= 0 || escolha > series.length) {
-                    System.out.println("Escolha inválida. Digite um número entre 1 e " + series.length);
-                }
-            } while (escolha <= 0 || escolha > series.length);
-            
-            Serie serieSelecionada = series[escolha-1];
-            
-            // Verifica se existem episódios associados
-            ArquivoEpisodios arqEpisodios = new ArquivoEpisodios();
-            Episodio[] episodios = arqEpisodios.readPorSerie(serieSelecionada.getID());
-            
-            if (episodios != null && episodios.length > 0) {
-                System.out.println("\nNão é possível excluir a série porque existem episódios associados:");
-                for (Episodio ep : episodios) {
-                    System.out.println("- " + ep.getNome() + " (Temporada " + ep.getTemporada() + ")");
-                }
-                System.out.println("\nExclua primeiro os episódios associados.");
+                serieSelecionada = series[escolha-1];
+            } catch (NumberFormatException e) {
+                System.out.println("Número inválido. Operação cancelada.");
                 return;
             }
-            
-            // Confirmação final
-            System.out.print("\nConfirma a exclusão da série? (S/N) ");
-            char resp = console.nextLine().toUpperCase().charAt(0);
-            if (resp == 'S') {
-                if (arqSeries.delete(serieSelecionada.getID())) {
-                    System.out.println("Série excluída com sucesso.");
-                } else {
-                    System.out.println("Erro ao excluir a série.");
-                }
+        } else {
+            serieSelecionada = series[0];
+        }
+        
+        // Verificar se há episódios vinculados a esta série
+        ArquivoEpisodios arqEpisodios = new ArquivoEpisodios();
+        ArrayList<ParIdId> pii = arqEpisodios.getAllEpisodesFromSerie(serieSelecionada.getID());
+        if (!pii.isEmpty()) {
+            System.out.println("\nEsta série não pode ser excluída porque possui " + 
+                             pii.size() + " episódio(s) vinculado(s).");
+            System.out.println("Exclua primeiro todos os episódios da série.");
+            return;
+        }
+        
+        // Confirmar exclusão
+        System.out.print("\nConfirma a exclusão da série '" + serieSelecionada.getNome() + "'? (S/N) ");
+        char resp = console.nextLine().charAt(0);
+        if (resp == 'S' || resp == 's') {
+            if (arqSeries.delete(serieSelecionada.getID())) {
+                System.out.println("Série excluída com sucesso!");
             } else {
-                System.out.println("Operação cancelada.");
+                System.out.println("Erro ao excluir a série.");
             }
-            
+        } else {
+            System.out.println("Operação cancelada.");
+        }
+        
+    } catch (Exception e) {
+        System.out.println("Erro ao tentar excluir a série: " + e.getMessage());
+        e.printStackTrace();
+    }
+}
+private void listarAtoresPorSerie() {
+        try {
+            System.out.print("ID da série: ");
+            int idSerie = Integer.parseInt(console.nextLine());
+            ArrayList<ParIdIdSA> lista = arvore2.read(new ParIdIdSA(idSerie, -1));
+            System.out.print("Resposta: ");
+            for (int i = 0; i < lista.size(); i++)
+              System.out.print(lista.get(i) + " ");
         } catch (Exception e) {
-            System.out.println("Erro do sistema. Não foi possível completar a operação.");
-            e.printStackTrace();
+            System.out.println("Erro: " + e.getMessage());
         }
     }
+
 }
