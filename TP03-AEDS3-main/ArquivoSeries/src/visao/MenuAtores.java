@@ -5,28 +5,51 @@ import entidades.Ator;
 import java.io.File;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
 
 import aeds3.ArvoreBMais;
 import modelo.ArquivoAtores;
+import modelo.ElementoLista;
+import modelo.ListaInvertida;
 import modelo.ParIdIdAS;
 import modelo.ParNameAtorID;
+import modelo.StopWords;
 import modelo.ParIdIdAS;
 
 public class MenuAtores {
+
+    private ListaInvertida listaInvertidaAtores;
+    private static final String ARQ_DICIONARIO_ATORES = "dados/indice/dicionario_atores.db";
+    private static final String ARQ_BLOCOS_ATORES = "dados/indice/blocos_atores.db";
+    private static final int QTDE_REGISTROS_POR_BLOCO = 5;
 
     private ArquivoAtores arquivo;
     private Scanner scanner;
     ArvoreBMais<ParNameAtorID> arvore;
     ArvoreBMais<ParIdIdAS> arvore2;
+
     public MenuAtores() {
         try {
             arquivo = new ArquivoAtores();
             File d = new File("dados/Arvores");
-            if(!d.exists()){d.mkdir();}
-            arvore=new ArvoreBMais<>(ParNameAtorID.class.getConstructor(),5,"dados/Arvores/arvoreAtorNomeId.db");
+            if(!d.exists()) { d.mkdir(); }
+            
+            File i = new File("dados/indice");
+            if(!i.exists()) { i.mkdir(); }
+            
+            arvore = new ArvoreBMais<>(ParNameAtorID.class.getConstructor(), 5, "dados/Arvores/arvoreAtorNomeId.db");
             arvore2 = new ArvoreBMais<>(ParIdIdAS.class.getConstructor(), 5, "dados/Arvores/arvoreAtorSerie.db");
-
+            
+            // Inicializa a lista invertida para atores
+            listaInvertidaAtores = new ListaInvertida(
+                QTDE_REGISTROS_POR_BLOCO, 
+                ARQ_DICIONARIO_ATORES, 
+                ARQ_BLOCOS_ATORES
+            );
         } catch (Exception e) {
             System.out.println("Erro ao inicializar o arquivo de atores: " + e.getMessage());
         }
@@ -40,10 +63,11 @@ public class MenuAtores {
             System.out.println("\n----- MENU DE ATORES -----");
             System.out.println("1 - Cadastrar ator");
             System.out.println("2 - Buscar ator por nome");
-            System.out.println("3 - Atualizar ator");
-            System.out.println("4 - Remover ator");
-            System.out.println("5 - Listar todos os atores");
-             System.out.println("6 - Listar a serie de cada ator");
+            System.out.println("3 - Buscar ator por termos"); 
+            System.out.println("4 - Atualizar ator");
+            System.out.println("5 - Remover ator");
+            System.out.println("6 - Listar todos os atores");
+            System.out.println("7 - Listar a serie de cada ator");
             System.out.println("0 - Voltar");
             System.out.print("Escolha uma opção: ");
 
@@ -52,12 +76,39 @@ public class MenuAtores {
             switch (opcao) {
                 case 1 -> cadastrar();
                 case 2 -> buscarPorNome();
-                case 3 -> atualizar();
-                case 4 -> remover();
-                case 5 -> listarTodos();
-                case 6 -> listarSeriesPorAtor();
+                case 3 -> buscarPorTermos(); 
+                case 4 -> atualizar();
+                case 5 -> remover();
+                case 6 -> listarTodos();
+                case 7 -> listarSeriesPorAtor();
                 case 0 -> System.out.println("Retornando...");
                 default -> System.out.println("Opção inválida.");
+            }
+        }
+    }
+
+    private void indexarTermosAtor(Ator ator) throws Exception {
+        // Indexa o nome do ator
+        String texto = ator.getNome().toLowerCase();
+        String[] palavras = texto.split("[^a-zA-ZáéíóúÁÉÍÓÚâêîôÂÊÎÔãõÃÕçÇ]+");
+        
+        for (String palavra : palavras) {
+            palavra = palavra.trim();
+            if (!palavra.isEmpty() && palavra.length() > 2 && !StopWords.isStopWord(palavra)) {
+                ElementoLista elemento = new ElementoLista(ator.getID(), 1.0f);
+                listaInvertidaAtores.create(palavra, elemento);
+            }
+        }
+        
+        // Indexa a nacionalidade (opcional)
+        texto = ator.getNacionalidade().toLowerCase();
+        palavras = texto.split("[^a-zA-ZáéíóúÁÉÍÓÚâêîôÂÊÎÔãõÃÕçÇ]+");
+        
+        for (String palavra : palavras) {
+            palavra = palavra.trim();
+            if (!palavra.isEmpty() && palavra.length() > 2 && !StopWords.isStopWord(palavra)) {
+                ElementoLista elemento = new ElementoLista(ator.getID(), 0.7f); // Peso menor para nacionalidade
+                listaInvertidaAtores.create(palavra, elemento);
             }
         }
     }
@@ -73,10 +124,93 @@ public class MenuAtores {
 
             Ator ator = new Ator(-1, nome, nacionalidade, dataNascimento);
             int id = arquivo.create(ator);
+            ator.setID(id); // Garante que o ID está definido
+            indexarTermosAtor(ator); // Adiciona esta linha
             System.out.println("Ator cadastrado com ID: " + id);
             
         } catch (Exception e) {
             System.out.println("Erro ao cadastrar ator: " + e.getMessage());
+        }
+    }
+
+    private void buscarPorTermos() {
+        System.out.println("\nBusca de atores por termos");
+        System.out.print("\nDigite os termos de busca (nome ou nacionalidade): ");
+        String termos = scanner.nextLine().toLowerCase();
+        
+        if(termos.isEmpty()) {
+            return;
+        }
+        
+        try {
+            String[] palavras = termos.split("[^a-zA-ZáéíóúÁÉÍÓÚâêîôÂÊÎÔãõÃÕçÇ]+");
+            Set<Integer> idsEncontrados = new HashSet<>();
+            boolean primeiroTermo = true;
+            
+            for (String palavra : palavras) {
+                palavra = palavra.trim();
+                if (palavra.isEmpty() || palavra.length() < 2) continue;
+                
+                ElementoLista[] elementos = listaInvertidaAtores.read(palavra);
+                if (elementos != null && elementos.length > 0) {
+                    Set<Integer> idsTermo = new HashSet<>();
+                    for (ElementoLista elemento : elementos) {
+                        idsTermo.add(elemento.getId());
+                    }
+                    
+                    if (primeiroTermo) {
+                        idsEncontrados.addAll(idsTermo);
+                        primeiroTermo = false;
+                    } else {
+                        // Interseção para busca AND
+                        idsEncontrados.retainAll(idsTermo);
+                    }
+                } else {
+                    // Se um termo não for encontrado, limpa os resultados
+                    idsEncontrados.clear();
+                    break;
+                }
+            }
+            
+            // Mostrar resultados
+            if (idsEncontrados.isEmpty()) {
+                System.out.println("Nenhum ator encontrado com esses termos.");
+            } else {
+                System.out.println("\nAtores encontrados (" + idsEncontrados.size() + "):");
+                List<Ator> atoresEncontrados = new ArrayList<>();
+                
+                for (int id : idsEncontrados) {
+                    Ator a = arquivo.read(id);
+                    if (a != null) {
+                        atoresEncontrados.add(a);
+                    }
+                }
+                
+                // Ordenar por nome do ator
+                atoresEncontrados.sort(Comparator.comparing(Ator::getNome));
+                
+                int contador = 1;
+                for (Ator a : atoresEncontrados) {
+                    System.out.println(contador++ + " - " + a.getNome() + 
+                                    " (" + a.getNacionalidade() + ")");
+                }
+                
+                // Opção para ver detalhes
+                if (!atoresEncontrados.isEmpty()) {
+                    System.out.print("\nDigite o número do ator para ver detalhes (0 para voltar): ");
+                    try {
+                        int opcao = Integer.parseInt(scanner.nextLine());
+                        if (opcao > 0 && opcao <= atoresEncontrados.size()) {
+                            System.out.println(atoresEncontrados.get(opcao-1));
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Opção inválida.");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao realizar a busca.");
+            e.printStackTrace();
         }
     }
 
@@ -98,8 +232,6 @@ public class MenuAtores {
             System.out.print("ID do ator a atualizar: ");
             int id = Integer.parseInt(scanner.nextLine());
             
-            
-            System.out.println("Digite o nome do ator:");
             Ator ator = arquivo.read(id);
 
             if (ator == null) {
@@ -107,7 +239,6 @@ public class MenuAtores {
                 return;
             }
 
-           
             System.out.println(ator);
             System.out.print("Novo nome: ");
             String nome = scanner.nextLine();
@@ -116,12 +247,17 @@ public class MenuAtores {
             System.out.print("Nova data de nascimento (AAAA-MM-DD): ");
             LocalDate dataNascimento = LocalDate.parse(scanner.nextLine());
 
+            // Remove índices antigos
+            listaInvertidaAtores.delete(Integer.toString(ator.getID()), ator.getID());
+            
             ator.setNome(nome);
             ator.setNacionalidade(nacionalidade);
             ator.setDataNascimento(dataNascimento);
 
             boolean sucesso = arquivo.update(ator);
             if (sucesso) {
+                // Reindexa com os novos dados
+                indexarTermosAtor(ator);
                 System.out.println("Ator atualizado com sucesso.");
             } else {
                 System.out.println("Falha na atualização.");
@@ -136,10 +272,10 @@ public class MenuAtores {
         try {
             System.out.print("ID do ator a remover: ");
             int id = Integer.parseInt(scanner.nextLine());
-            System.out.print("Nome: ");
-            String nome = scanner.nextLine();
-            /*arvore.delete(new ParNameAtorID(nome, id));
-            arvore.print();*/
+            
+            // Remove os índices primeiro
+            listaInvertidaAtores.delete(Integer.toString(id), id);
+            
             boolean sucesso = arquivo.delete(id);
             if (sucesso) {
                 System.out.println("Ator removido com sucesso.");
