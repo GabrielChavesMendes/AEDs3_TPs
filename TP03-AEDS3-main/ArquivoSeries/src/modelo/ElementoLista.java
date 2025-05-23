@@ -1,4 +1,4 @@
-package aeds3;
+package modelo;
 
 public class ElementoLista implements Comparable<ElementoLista>, Cloneable {
     

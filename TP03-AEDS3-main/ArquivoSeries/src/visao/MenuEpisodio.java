@@ -8,21 +8,32 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import modelo.ArquivoEpisodios;
 import modelo.ArquivoSeries;
+import modelo.ElementoLista;
+import modelo.ListaInvertida;
+import modelo.StopWords;
 
 public class MenuEpisodio {
+    
+    private ListaInvertida listaInvertida;
+    private static final String ARQ_DICIONARIO = "TP03-AEDS3-main\\ArquivoSeries\\src\\dados\\dicionario.listainv.db";
+    private static final String ARQ_BLOCOS = "TP03-AEDS3-main\\ArquivoSeries\\src\\dados\\blocos.listainv.db";
+    private static final int QTDE_REGISTROS_POR_BLOCO = 5;
 
     ArquivoEpisodios arqEpisodio;
     private static Scanner console = new Scanner(System.in);
 
     public MenuEpisodio() throws Exception {
         arqEpisodio = new ArquivoEpisodios();
+        listaInvertida = new ListaInvertida(QTDE_REGISTROS_POR_BLOCO, ARQ_DICIONARIO, ARQ_BLOCOS);
     }
 
     public void menu() throws Exception {
@@ -32,19 +43,20 @@ public class MenuEpisodio {
             System.out.println("-----------");
             System.out.println("> Início > Episódios");
             System.out.println("\n1 - Incluir");
-            System.out.println("2 - Buscar");
-            System.out.println("3 - Alterar");
-            System.out.println("4 - Excluir");
-            System.out.println("5 - Listar por Série");  // Nova opção
+            System.out.println("2 - Buscar por nome");
+            System.out.println("3 - Buscar por termos");  // Nova opção
+            System.out.println("4 - Alterar");
+            System.out.println("5 - Excluir");
+            System.out.println("6 - Listar por Série");
             System.out.println("0 - Voltar ao menu anterior");
-    
+
             System.out.print("\nOpção: ");
             try {
                 opcao = Integer.valueOf(console.nextLine());
             } catch(NumberFormatException e) {
                 opcao = -1;
             }
-    
+
             switch (opcao) {
                 case 1:
                     incluirEpisodio();
@@ -52,13 +64,16 @@ public class MenuEpisodio {
                 case 2:
                     buscarEpisodio();
                     break;
-                case 3:
-                    alterarEpisodio();
+                case 3:  // Nova opção
+                    buscarPorTermos();
                     break;
                 case 4:
+                    alterarEpisodio();
+                    break;
+                case 5:
                     excluirEpisodio();
                     break;
-                case 5:  // Novo case
+                case 6:
                     listarEpisodiosdeSerie();
                     break;
                 case 0:
@@ -68,6 +83,21 @@ public class MenuEpisodio {
                     break;
             }
         } while (opcao != 0);
+    }
+
+    private void indexarTermos(Episodio episodio) throws Exception {
+        String texto = episodio.getNome().toLowerCase();
+        String[] palavras = texto.split("\\s+"); // Divide por espaços
+        
+        for (String palavra : palavras) {
+            // Remove pontuação e verifica se não é stop word
+            palavra = palavra.replaceAll("[^a-zA-ZáéíóúÁÉÍÓÚâêîôÂÊÎÔãõÃÕçÇ]", "");
+            if (!palavra.isEmpty() && !StopWords.isStopWord(palavra)) {
+                // Cria elemento com ID do episódio e frequência 1 (poderia ser TF-IDF no futuro)
+                ElementoLista elemento = new ElementoLista(episodio.getID(), 1.0f);
+                listaInvertida.create(palavra, elemento);
+            }
+        }
     }
 
     public void incluirEpisodio() throws Exception {
@@ -178,6 +208,71 @@ public class MenuEpisodio {
             
         } catch (Exception e) {
             System.out.println("Erro ao buscar séries. Episódio não será incluído.");
+            e.printStackTrace();
+        }
+
+        Episodio c = new Episodio(idSerie, nome, temporada, dataLancamento, duracao);
+        arqEpisodio.create(c);
+        indexarTermos(c);  // Adiciona esta linha
+        System.out.println("Episódio incluído com sucesso.");
+    }
+
+    public void buscarPorTermos() {
+        System.out.println("\nBusca de episódios por termos");
+        System.out.print("\nDigite os termos de busca (separados por espaço): ");
+        String termos = console.nextLine().toLowerCase();
+        
+        if(termos.isEmpty()) {
+            return;
+        }
+        
+        try {
+            String[] palavras = termos.split("\\s+");
+            Set<Integer> idsEncontrados = new HashSet<>();
+            
+            // Busca cada termo na lista invertida
+            for (String palavra : palavras) {
+                palavra = palavra.replaceAll("[^a-zA-ZáéíóúÁÉÍÓÚâêîôÂÊÎÔãõÃÕçÇ]", "");
+                if (!palavra.isEmpty() && !StopWords.isStopWord(palavra)) {
+                    ElementoLista[] elementos = listaInvertida.read(palavra);
+                    if (elementos != null) {
+                        for (ElementoLista elemento : elementos) {
+                            idsEncontrados.add(elemento.getId());
+                        }
+                    }
+                }
+            }
+            
+            // Mostra os episódios encontrados
+            if (idsEncontrados.isEmpty()) {
+                System.out.println("Nenhum episódio encontrado com esses termos.");
+            } else {
+                System.out.println("\nEpisódios encontrados:");
+                int contador = 1;
+                for (int id : idsEncontrados) {
+                    Episodio ep = arqEpisodio.read(id);
+                    if (ep != null) {
+                        System.out.println(contador++ + " - " + ep.getNome() + 
+                                        " (Temporada: " + ep.getTemporada() + ")");
+                    }
+                }
+                
+                // Opção para ver detalhes de um episódio
+                if (contador > 1) {
+                    System.out.print("\nDigite o número do episódio para ver detalhes (0 para voltar): ");
+                    try {
+                        int opcao = Integer.parseInt(console.nextLine());
+                        if (opcao > 0 && opcao < contador) {
+                            int id = idsEncontrados.toArray(new Integer[0])[opcao-1];
+                            mostrarEpisodio(arqEpisodio.read(id));
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Opção inválida.");
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao realizar a busca.");
             e.printStackTrace();
         }
     }
