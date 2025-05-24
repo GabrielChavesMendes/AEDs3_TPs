@@ -1,5 +1,5 @@
-# TP02-AEDS3
-TP 02 - Relação N:N
+# TP03-AEDS3
+TP 03 - Índice Invertido 
 
 # Participantes:
  - Alessandra Faria Rodrigues
@@ -8,37 +8,33 @@ TP 02 - Relação N:N
  - Gabriela de Assis dos Reis
 
 # O que o nosso trabalho faz?
- Analisamos os critérios e especificações do trabalho antes de inicia-lo e após essa analise, o grupo, sempre que possível, se reunia para analisar o código disponibilizado e começar as alterações com base no que a atividade pedia. Primeiro fizemos o CRUD de séries, alterando e corrigindo erros e logo após essa etapa focamos em implementar o CRUD de episódios com todas as suas restrições, utilizando os códigos disponibilizados e estruturas como Arvore B+ e Tabela Hash Extensível. Durante o projeto sempre nos atentamos nas restrições, como não permitir a inclusão de episódio sem série. No fim, construímos um projeto que cria um catálogo de séries com seus referentes episódios, podendo fazer inclusão, alteração, exclusão e listagem de séries e episódios. Além disso, foi adicionado a opção de CRUD dos atores nas séries, em uma relação N:N onde garante que seja possível ver quais séries o ator participou e os atores que participaram de uma série.
+Este projeto tem como objetivo implementar um sistema de busca eficiente para séries, episódios e atores utilizando índices invertidos e o cálculo do valor TFxIDF (Term Frequency × Inverse Document Frequency). 
+Após uma análise inicial, começamos a explorar o código base já existente do trabalho anterior (TP2), entendendo como as entidades estavam organizadas e de que forma poderíamos integrar o novo mecanismo de busca. Inicialmente, nos dedicamos à construção da estrutura de índice invertido, que exigiu o pré-processamento dos textos (títulos e nomes), com a remoção de stop words, normalização das palavras (retirada de acentos e conversão para minúsculas) e cálculo da frequência dos termos. A partir disso, implementamos as listas invertidas para mapear cada termo às entidades correspondentes, registrando também a frequência relativa (TF) dos termos. 
+Com as listas invertidas funcionando, partimos para a implementação da lógica de busca. Para isso, desenvolvemos o cálculo dinâmico do IDF (inverso da frequência dos documentos) com base no total de registros e na quantidade de entidades que contêm cada termo. Em seguida, aplicamos o cálculo do TFxIDF para gerar uma pontuação de relevância, que serviu de base para ordenarmos os resultados da busca. As buscas foram integradas às três entidades do sistema: séries, episódios e atores. Em cada uma delas, garantimos que a consulta passasse pelo índice invertido, substituindo as formas de busca tradicionais por um sistema mais eficiente e inteligente.
 
 # Repositório no GitHub: https://github.com/GabrielChavesMendes/AEDs3_TPs.git
 
 # Experiência do grupo:
-1.As operações de inclusão, busca, alteração e exclusão de atores estão implementadas e funcionando corretamente? 
-R: Sim, todas as operações do CRUD estão implementadas e funcionando corretamente.
+1. O índice invertido com os termos dos títulos das séries foi criado usando a classe ListaInvertida?
+R: Sim, as palavras das séries foi criado usando Lista Invertida 
 
-2.O relacionamento entre séries e atores foi implementado com árvores B+ e funciona corretamente, assegurando a consistência entre as duas entidades?
-R: Sim, para cada par de relacionamento foi implementado um par de ids, que funcionam perfeitamente e quando há uma exclusão de ator ele verifica se o ator esta vinculado a alguma serie, se sim, então não exclui.
+2. O índice invertido com os termos dos títulos dos episódios foi criado usando a classe ListaInvertida?
+R:Sim, os termos dos títulos dos episódios foi criado usando Lista Invertida
 
-3.É possível consultar quais são os atores de uma série?
-R: Sim, é possível.
+3. O índice invertido com os termos dos nomes dos atores foi criado usando a classe ListaInvertida?
+R: Sim, atores foi criado usando Lista Invertida
 
-4.É possível consultar quais são as séries de um ator?
-R: Sim, é possível.
+4. É possível buscar séries por palavras usando o índice invertido?
+R: Sim, é possível fazer a busca de séries por palavras usando o índice invertido
 
-5.A remoção de séries remove os seus vínculos de atores?
-R: Sim, ao remover a serie ele remove o vículo com o ator;
+5. É possível buscar episódios por palavras usando o índice invertido?
+R: Sim, é possível fazer a busca de episódios por palavras usando o índice invertido
 
-6.A inclusão de um ator em uma série se limita aos atores existentes?
-R: Sim, você só pode vincular um ator que exista.
+6. É possível buscar atores por palavras usando o índice invertido?
+R: Sim, é possível fazer a busca de atores por palavras usando o índice invertido
 
-7.A remoção de um ator checa se há alguma série vinculado a ele?
-R: Sim, antes de excluir o ator é checado se há algum vinculo entre ele e a série.
+7. O trabalho está completo?
+R: Sim, o trabalho está completo
 
-8.O trabalho está funcionando corretamente?
-R: Sim, o trabalho está funcionando corretamente.
-
-9.O trabalho está completo?
-R: Sim, o trabalho está completo.
-
-10.O trabalho é original e não a cópia de um trabalho de outro grupo?
-R: Sim, o trabalho é original.
+8. O trabalho é original e não a cópia de um trabalho de um colega?
+R: O trabalho é totalmente original 
