@@ -87,9 +87,4 @@ public class ParIdId implements aeds3.RegistroArvoreBMais<ParIdId> {
       this.id2 = dis.readInt();
   }
 
-  public int getId2() {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'getId2'");
-  }
-
 }
