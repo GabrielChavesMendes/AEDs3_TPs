@@ -15,17 +15,21 @@ Este projeto implementa uma tabela hash extensível completa com visualização 
 
 ## Experiência do grupo:
 1. A visualização interativa da Tabela Hash Extensível foi criada?
+   
 R: Sim, a vizualização interativa foi criada
 
 2. Há um vídeo de até 2 minutos demonstrando o uso da visualização?
+   
 R: Sim, há um vídeo de até 2 minutos demonstrando o uso
 
 3. O trabalho está funcionando corretamente?
+   
 R: Sim, o trabalho funciona corretamente
 
 4. O trabalho está completo?
+
 R: Sim, o trabalho s encontra completo
 
 5. O trabalho é original e não a cópia de um trabalho de um colega?
+   
 R: Sim, o trabalho é original 
-5.O trabalho é original e não a cópia de um trabalho de um colega?
